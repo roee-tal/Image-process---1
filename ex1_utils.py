@@ -183,11 +183,22 @@ def quantizeImage(imOrig: np.ndarray, nQuant: int, nIter: int) -> (List[np.ndarr
         :return: (List[qImage_i],List[error_i])
     """
     if len(imOrig.shape) == 2:  # single channel (grey channel)
-        return Quant2Shape(imOrig, nQuant, nIter)
+        flag = 2
+        return Quant2Shape(imOrig.copy(), nQuant, nIter, flag, 0)
 
 
-def Quant2Shape(imOrig, nQuant, nIter):
+    flag = 3
+    yiqImg = transformRGB2YIQ(imOrig)
+    return Quant2Shape(yiqImg[:, :, 0].copy(), nQuant, nIter, flag, yiqImg)  # y channel = yiqImg[:, :, 0].copy()
+    # qImage = []
+    # for img in qImage_:
+    #     # convert the original img back from YIQ to RGB
+    #     qImage_i = transformYIQ2RGB(np.dstack((img, yiqImg[:, :, 1], yiqImg[:, :, 2])))
+    #     qImage.append(qImage_i)
+    #
+    # return qImage, mse
 
+def Quant2Shape(imOrig, nQuant, nIter, flag, img):
     Q_IM = []
     MSE = []
     orig255 = cv2.normalize(imOrig, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
@@ -198,5 +209,22 @@ def Quant2Shape(imOrig, nQuant, nIter):
     z_border = np.zeros(nQuant + 1, dtype=int)
     for i in range(nQuant + 1):
         z_border[i] = i * (255 / nQuant)
+    for i in range(nIter):
+        q = find_q(z_border, histOrig255)
+        qImage_i = np.zeros_like(imOrig)
+        for k in range(len(q)):
+            qImage_i[orig255 > z_border[k]] = q[k]
 
-
+        z_border = find_new_z(q)
+        MSE.append(np.sqrt((orig255 - qImage_i) ** 2).mean())
+        Q_IM.append(qImage_i / 255.0)
+    if flag == 3:
+        qImage = []
+        for i in range(len(Q_IM)):
+            img[:, :, 0] = Q_IM[i]
+            imE = transformYIQ2RGB(img)
+            qImage.append(imE)
+            # Q_IM[i][Q_IM[i] > 1] = 1
+            # Q_IM[i][Q_IM[i] < 0] = 0
+        return qImage,MSE
+    return Q_IM, MSE
