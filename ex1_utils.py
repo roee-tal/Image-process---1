@@ -67,17 +67,8 @@ def imDisplay(filename: str, representation: int):
     """
     img = imReadAndConvert(filename, representation)
     plt.imshow(img)
-    plt.gray()  # to change the view of the picture to actual greyscale
+    plt.gray()  # to change the image to grayscale
     plt.show()
-    # img = cv2.imread(filename)
-    # if representation == 2:
-    #     im_RGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    #     plt.imshow(im_RGB)
-    #     plt.show()
-    # else:
-    #     plt.imshow(img,cmap='gray')
-    #     plt.show()
-
 
 def transformRGB2YIQ(imgRGB: np.ndarray) -> np.ndarray:
     """
@@ -122,9 +113,9 @@ def hsitogramEqualize(imgOrig: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarra
         :param imgOrig: Original Histogram
         :ret
     """
-    if len(imgOrig.shape) == 2:
+    if len(imgOrig.shape) == 2:  # If the pic is grayscale
         return histEq2Shape(imgOrig)
-    else:
+    else:  # If the pic is rgb -  operate on the Y channel of YIQ, and the convert back to grayscale
         yi = transformRGB2YIQ(imgOrig)
         y = yi[:,:,0]
         imEq, histOrig255, histEq = histEq2Shape(y)
@@ -136,18 +127,24 @@ def hsitogramEqualize(imgOrig: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarra
 
 
 def histEq2Shape(imgOrig):
+    # normalize from 0-1 to 0-255
     orig255 = cv2.normalize(imgOrig, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
     orig255 = orig255.astype(np.uint8)
+    # calculate the histogram
     histOrig255 = np.zeros(256)
     for pix in range(256):
         histOrig255[pix] = np.count_nonzero(orig255 == pix)
+    # calculate the normalized cumsum with help function + LUT
     cs = cumSum_calc(histOrig255)
+    # replace each intensity with LUT[i]
     imEq = np.zeros_like(imgOrig, dtype=float)
     for i in range(256):
         imEq[orig255 == i] = int(cs[i])
+    # calculate the new histogram
     histEq = np.zeros(256)
     for pix in range(256):
         histEq[pix] = np.count_nonzero(imEq == pix)
+    # Normalize back to 0-1
     imEq = imEq / 255.0
 
     return imEq, histOrig255, histEq
@@ -182,21 +179,14 @@ def quantizeImage(imOrig: np.ndarray, nQuant: int, nIter: int) -> (List[np.ndarr
         :param nIter: Number of optimization loops
         :return: (List[qImage_i],List[error_i])
     """
-    if len(imOrig.shape) == 2:  # single channel (grey channel)
+    if len(imOrig.shape) == 2:
         flag = 2
         return Quant2Shape(imOrig.copy(), nQuant, nIter, flag, 0)
-
 
     flag = 3
     yiqImg = transformRGB2YIQ(imOrig)
     return Quant2Shape(yiqImg[:, :, 0].copy(), nQuant, nIter, flag, yiqImg)  # y channel = yiqImg[:, :, 0].copy()
-    # qImage = []
-    # for img in qImage_:
-    #     # convert the original img back from YIQ to RGB
-    #     qImage_i = transformYIQ2RGB(np.dstack((img, yiqImg[:, :, 1], yiqImg[:, :, 2])))
-    #     qImage.append(qImage_i)
-    #
-    # return qImage, mse
+
 
 def Quant2Shape(imOrig, nQuant, nIter, flag, img):
     Q_IM = []
@@ -206,9 +196,8 @@ def Quant2Shape(imOrig, nQuant, nIter, flag, img):
     histOrig255 = np.zeros(256)
     for pix in range(256):
         histOrig255[pix] = np.count_nonzero(orig255 == pix)
-    z_border = np.zeros(nQuant + 1, dtype=int)
-    for i in range(nQuant + 1):
-        z_border[i] = i * (255 / nQuant)
+    pixel_num = (float)(imOrig.shape[0] * imOrig.shape[1])
+    z_border = find_first_z(pixel_num,nQuant,histOrig255)
     for i in range(nIter):
         q = find_q(z_border, histOrig255)
         qImage_i = np.zeros_like(imOrig)
@@ -219,12 +208,29 @@ def Quant2Shape(imOrig, nQuant, nIter, flag, img):
         MSE.append(np.sqrt((orig255 - qImage_i) ** 2).mean())
         Q_IM.append(qImage_i / 255.0)
     if flag == 3:
-        qImage = []
         for i in range(len(Q_IM)):
             img[:, :, 0] = Q_IM[i]
-            imE = transformYIQ2RGB(img)
-            qImage.append(imE)
-            # Q_IM[i][Q_IM[i] > 1] = 1
-            # Q_IM[i][Q_IM[i] < 0] = 0
-        return qImage,MSE
+            Q_IM[i] = transformYIQ2RGB(img)
+            Q_IM[i][Q_IM[i] > 1] = 1
+            Q_IM[i][Q_IM[i] < 0] = 0
     return Q_IM, MSE
+
+
+def find_first_z(pixel_num, nQuant, histOrig):
+    cumsum = np.cumsum(histOrig)
+    new_z =np.zeros(nQuant + 1, dtype=int)
+    bound1 = pixel_num / nQuant
+    bound = bound1
+    i = 1
+    for x in range(255):
+        if (cumsum[x] >= bound):
+            new_z[i] = x
+            i = i + 1
+            bound = bound + bound1
+    while (i < len(new_z) - 1):
+        new_z[i] = 255
+        i = i + 1
+    new_z[0] = 0
+    new_z[len(new_z) - 1] = 255
+    new_z = new_z.astype(int)
+    return new_z
