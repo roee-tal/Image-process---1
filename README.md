@@ -20,3 +20,40 @@ gamma.py- gamma correction - Question 4.6
 
 
 ### Functions
+**imReadAndConvert**
+Reads an image, and returns the image converted as requested
+
+**imDisplay**
+Reads an image as RGB or GRAY_SCALE and displays it
+
+**transformRGB2YIQ**
+Converts an RGB image to YIQ color space
+
+**transformYIQ2RGB**
+Converts an YIQ image to RGB color space
+
+**cumSum_calc**
+help function to calculate the cumsum (want to try it by myself)
+
+**hsitogramEqualize**
+Equalizes the histogram of an image
+
+**quantizeImage**
+Quantized an image in to **nQuant** colors
+
+**Quant2Shape**
+Help function to quantize an image with shape 2 in to **nQuant** colors - this function does the quantization
+
+**find_first_z**
+Help function to find the first borders - **according to the pixel's amount** - same amount in each part
+
+**find_new_z**
+ Help function to calculate the new borders using the formula from the lecture.
+ 
+ **find_q**
+ Help function to calculate the new q values for each border
+ 
+ **gammaDisplay**
+ GUI for gamma correction
+ 
+ 
