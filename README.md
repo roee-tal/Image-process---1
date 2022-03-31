@@ -10,9 +10,13 @@
 * [Submission Files](#Submission-Files)
 * [Functions](#Functions)
 
+<hr> 
+
 ### Version and platform
 - Python Version - Python 3.8
 - Platform - Pycharm
+
+<hr> 
 
 ### Submission Files
 ex1_main.py - The driver code.
