@@ -23,6 +23,7 @@ This file contains the implementation iv'e made for every function in the task(e
 
 gamma.py- gamma correction - Question 4.6  
 
+>
 
 ### Functions
 
