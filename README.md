@@ -5,6 +5,11 @@
 
 **This is the first task in the course - the main purpose of this exercise is to get  acquainted with Python’s basic syntax and some of its image processing facilities**
 
+## Table of contents
+* [Version and platform](#Version-and-platform)
+* [Submission Files](#Submission-Files)
+* [Functions](#Functions)
+
 ### Version and platform
 - Python Version - Python 3.8
 - Platform - Pycharm
@@ -20,6 +25,7 @@ gamma.py- gamma correction - Question 4.6
 
 
 ### Functions
+
 **imReadAndConvert:**
 
 Reads an image, and returns the image converted as requested
