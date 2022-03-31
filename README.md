@@ -26,7 +26,7 @@ gamma.py- gamma correction - Question 4.6
 
 ### Functions
 
-**imReadAndConvert:**
+- **imReadAndConvert:**
 
 Reads an image, and returns the image converted as requested
 
