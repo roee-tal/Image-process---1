@@ -27,6 +27,8 @@ This file contains the implementation iv'e made for every function in the task(e
 
 gamma.py- gamma correction - Question 4.6  
 
+imgtst1, imgtst2 - i chose first pic because it has many colors, and the second because its more shady and with a lot of details and i thought it would be interesting to see its histogam and quantization
+
 <hr> 
 
 ### Functions
