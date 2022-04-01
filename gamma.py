@@ -25,9 +25,9 @@ def gammaDisplay(img_path: str, rep: int):
         # Global variable - need for using in the help function
         global image
         if rep == 2:
-            image = cv2.imread(img_path,2)
+            image = cv2.imread(img_path)
         else:
-            image = cv2.imread(img_path,1)
+            image = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
         cv2.namedWindow(title_window)
         trackbar_name = 'Gamma %d' % 200
         cv2.createTrackbar(trackbar_name, title_window, 100, 200, on_trackbar)
@@ -49,7 +49,7 @@ def on_trackbar(bright):
 
 
 def main():
-    gammaDisplay('bac_con.png', LOAD_GRAY_SCALE)
+    gammaDisplay('beach.jpg', LOAD_GRAY_SCALE)
 
 
 if __name__ == '__main__':
