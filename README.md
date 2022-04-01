@@ -5,9 +5,18 @@
 
 **This is the first task in the course - the main purpose of this exercise is to get  acquainted with Python’s basic syntax and some of its image processing facilities**
 
+## Table of contents
+* [Version and platform](#Version-and-platform)
+* [Submission Files](#Submission-Files)
+* [Functions](#Functions)
+
+<hr> 
+
 ### Version and platform
 - Python Version - Python 3.8
 - Platform - Pycharm
+
+<hr> 
 
 ### Submission Files
 ex1_main.py - The driver code.
@@ -18,5 +27,58 @@ This file contains the implementation iv'e made for every function in the task(e
 
 gamma.py- gamma correction - Question 4.6  
 
+imgtst1, imgtst2 - i chose first pic because it has many colors, and the second because its more shady and with a lot of details and i thought it would be interesting to see its histogam and quantization
+
+<hr> 
 
 ### Functions
+
+- **imReadAndConvert:**
+
+Reads an image, and returns the image converted as requested
+
+- **imDisplay:**
+
+Reads an image as RGB or GRAY_SCALE and displays it
+
+- **transformRGB2YIQ:**
+
+Converts an RGB image to YIQ color space
+
+- **transformYIQ2RGB:**
+
+Converts an YIQ image to RGB color space
+
+- **cumSum_calc:**
+
+help function to calculate the cumsum (want to try it by myself)
+
+- **hsitogramEqualize:**
+
+Equalizes the histogram of an image
+
+- **quantizeImage:**
+
+Quantized an image in to **nQuant** colors
+
+- **Quant2Shape:**
+
+Help function to quantize an image with shape 2 in to **nQuant** colors - this function does the quantization
+
+- **find_first_z:**
+
+Help function to find the first borders - **according to the pixel's amount** - same amount in each part
+
+- **find_new_z:**
+
+ Help function to calculate the new borders using the formula from the lecture.
+ 
+- **find_q:**
+ 
+ Help function to calculate the new q values for each border
+ 
+- **gammaDisplay:**
+ 
+ GUI for gamma correction
+ 
+ 
