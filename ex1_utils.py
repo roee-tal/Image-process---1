@@ -10,7 +10,6 @@
 """
 from typing import List
 import matplotlib.pyplot as plt
-from PIL import Image
 import cv2
 import numpy as np
 LOAD_GRAY_SCALE = 1
@@ -24,13 +23,6 @@ def myID() -> np.int:
     """
     return 315858506
 
-def NormalizeData(data):
-    """
-    return the array normalized to numbers between 0 and 1
-    :param data:
-    :return:
-    """
-    return (data - np.min(data)) / (np.max(data) - np.min(data))
 
 def imReadAndConvert(filename: str, representation: int) -> np.ndarray:
     """
@@ -39,14 +31,16 @@ def imReadAndConvert(filename: str, representation: int) -> np.ndarray:
     :param representation: GRAY_SCALE or RGB
     :return: The image object
     """
-    img = cv2.imread(filename)
-    if representation == LOAD_GRAY_SCALE:
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        return (img - img.min()) / (img.max() - img.min())
-    else:  # we should represent in RGB
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        return (img - img.min()) / (img.max() - img.min())
-
+    try:
+        img = cv2.imread(filename)
+        if representation == LOAD_GRAY_SCALE:
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            return (img - img.min()) / (img.max() - img.min())
+        else:  # rgb
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            return (img - img.min()) / (img.max() - img.min())
+    except:
+        print("Error")
 
 def imDisplay(filename: str, representation: int):
     """
@@ -55,10 +49,13 @@ def imDisplay(filename: str, representation: int):
     :param representation: GRAY_SCALE or RGB
     :return: None
     """
-    img = imReadAndConvert(filename, representation)
-    plt.imshow(img)
-    plt.gray()  # to change the image to grayscale
-    plt.show()
+    try:
+        img = imReadAndConvert(filename, representation)
+        plt.imshow(img)
+        plt.gray()  # to change the image to grayscale
+        plt.show()
+    except:
+        print("Error")
 
 def transformRGB2YIQ(imgRGB: np.ndarray) -> np.ndarray:
     """
@@ -66,12 +63,25 @@ def transformRGB2YIQ(imgRGB: np.ndarray) -> np.ndarray:
     :param imgRGB: An Image in RGB
     :return: A YIQ in image color space
     """
-    YIQ_from_RGB = np.array([[0.299, 0.587, 0.114],
-                             [0.59590059, -0.27455667, -0.32134392],
-                             [0.21153661, -0.52273617, 0.31119955]])
+    try:
+        YIQ_from_RGB = np.array([[0.299, 0.587, 0.114],
+                                 [0.59590059, -0.27455667, -0.32134392],
+                                 [0.21153661, -0.52273617, 0.31119955]])
 
-    YIQ = np.dot(imgRGB,YIQ_from_RGB.transpose())
-    return YIQ
+        YIQ = np.dot(imgRGB,YIQ_from_RGB.transpose().copy())
+        return YIQ
+    except:
+        print("Error")
+
+
+def f_between0_1(rgb_img,imgRGB):
+
+    rgb_img[:, :, 0] = (imgRGB[:, :, 0] - np.min(imgRGB[:, :, 0])) / (np.max(imgRGB[:, :, 0]) - np.min(imgRGB[:, :, 0]))
+    rgb_img[:, :, 1] = (imgRGB[:, :, 1] - np.min(imgRGB[:, :, 1])) / (np.max(imgRGB[:, :, 1]) - np.min(imgRGB[:, :, 1]))
+    rgb_img[:, :, 2] = (imgRGB[:, :, 2] - np.min(imgRGB[:, :, 2])) / (np.max(imgRGB[:, :, 2]) - np.min(imgRGB[:, :, 2]))
+
+    return rgb_img
+
 
 def transformYIQ2RGB(imgYIQ: np.ndarray) -> np.ndarray:
     """
@@ -79,12 +89,17 @@ def transformYIQ2RGB(imgYIQ: np.ndarray) -> np.ndarray:
     :param imgYIQ: An Image in YIQ
     :return: A RGB in image color space
     """
-    YIQ_from_RGB = np.array([[0.299, 0.587, 0.114],
-                             [0.59590059, -0.27455667, -0.32134392],
-                             [0.21153661, -0.52273617, 0.31119955]])
-    YIQ_conversion_inverse = np.linalg.inv(YIQ_from_RGB)
-    imgRGB = np.dot(imgYIQ, YIQ_conversion_inverse.transpose())
-    return imgRGB
+    try:
+        YIQ_from_RGB = np.array([[0.299, 0.587, 0.114],
+                                 [0.59590059, -0.27455667, -0.32134392],
+                                 [0.21153661, -0.52273617, 0.31119955]])
+        YIQ_conversion_inverse = np.linalg.inv(YIQ_from_RGB)
+        imgRGB = np.dot(imgYIQ, YIQ_conversion_inverse.transpose().copy())
+        rgb_img = imgYIQ.copy()
+        imgRG = f_between0_1(rgb_img,imgRGB) # To be in range [0..1] for float
+        return imgRG
+    except:
+        print("Error")
 
 def cumSum_calc(arr: np.array) -> np.ndarray:
     """
@@ -108,16 +123,18 @@ def hsitogramEqualize(imgOrig: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarra
         :param imgOrig: Original Histogram
         :ret
     """
-    if len(imgOrig.shape) == 2:  # If the pic is grayscale
-        return histEq2Shape(imgOrig)
-    else:  # If the pic is rgb -  operate on the Y channel of YIQ, and the convert back to grayscale
-        yi = transformRGB2YIQ(imgOrig)
-        y = yi[:,:,0]
-        imEq, histOrig255, histEq = histEq2Shape(y)
-        yi[:, :, 0] = imEq
-        imE = transformYIQ2RGB(yi)
-        return imE, histOrig255, histEq
-
+    try:
+        if len(imgOrig.shape) == 2:  # If the pic is grayscale
+            return histEq2Shape(imgOrig)
+        else:  # If the pic is rgb -  operate on the Y channel of YIQ, and the convert back to grayscale
+            yi = transformRGB2YIQ(imgOrig)
+            y = yi[:,:,0]
+            imEq, histOrig255, histEq = histEq2Shape(y)
+            yi[:, :, 0] = imEq
+            imE = transformYIQ2RGB(yi)
+            return imE, histOrig255, histEq
+    except:
+        print("error")
 
 
 
@@ -176,11 +193,13 @@ def find_first_z(pixel_num, nQuant, histOrig):
         :param pixel_num: pixel's amount
         :param nQuant: Number of colors to quantize the image to
         :param histOrig: The original histogram
-        :return: (List[qImage_i],List[error_i])
+        :return: The first borders
     """
     # In order to put same amount in each part - i used the cumsum
     cumsum = np.cumsum(histOrig)
     new_z =np.zeros(nQuant + 1, dtype=int)
+    new_z[0] = 0
+    new_z[len(new_z) - 1] = 255
     bound1 = pixel_num / nQuant
     bound = bound1
     i = 1
@@ -190,12 +209,6 @@ def find_first_z(pixel_num, nQuant, histOrig):
             new_z[i] = x
             i = i + 1
             bound = bound + bound1
-    while (i < len(new_z) - 1):
-        # add the first and last borders
-        new_z[i] = 255
-        i = i + 1
-    new_z[0] = 0
-    new_z[len(new_z) - 1] = 255
     new_z = new_z.astype(int)
     return new_z
 
@@ -207,14 +220,16 @@ def quantizeImage(imOrig: np.ndarray, nQuant: int, nIter: int) -> (List[np.ndarr
         :param nIter: Number of optimization loops
         :return: (List[qImage_i],List[error_i])
     """
-    if len(imOrig.shape) == 2: # grayscale
-        flag = 2
-        return Quant2Shape(imOrig.copy(), nQuant, nIter, flag, 0)
+    try:
+        if len(imOrig.shape) == 2: # grayscale
+            flag = 2
+            return Quant2Shape(imOrig.copy(), nQuant, nIter, flag, 0)
 
-    flag = 3 # rgb - operate on the Y channel of YIQ
-    yiqImg = transformRGB2YIQ(imOrig)
-    return Quant2Shape(yiqImg[:, :, 0].copy(), nQuant, nIter, flag, yiqImg)  # y channel = yiqImg[:, :, 0].copy()
-
+        flag = 3 # rgb - operate on the Y channel of YIQ
+        yiqImg = transformRGB2YIQ(imOrig)
+        return Quant2Shape(yiqImg[:, :, 0].copy(), nQuant, nIter, flag, yiqImg)  # y channel = yiqImg[:, :, 0].copy()
+    except:
+        print("Error")
 
 def Quant2Shape(imOrig, nQuant, nIter, flag, img):
     """
